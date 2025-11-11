@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro - FinEdTech</title>
+    <!-- Carrega Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carrega Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Fonte Inter (padrão do Tailwind) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Cor de fundo cinza claro */
+        }
+        /* Botão de aba ativo */
+        .tab-button.active {
+            border-bottom-color: #3b82f6; /* Azul */
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        /* Transições suaves */
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-content {
+            display: none; /* Oculta todas as abas por padrão */
+        }
+        .tab-content.active {
+            display: block; /* Mostra a aba ativa */
+        }
+        /* Estilo de Cartão para KPIs */
+        .kpi-card {
+            @apply bg-white p-6 rounded-lg shadow-md transition-all hover:shadow-lg;
+        }
+        .kpi-title {
+            @apply text-sm font-medium text-gray-500 truncate;
+        }
+        .kpi-value {
+            @apply mt-1 text-3xl font-semibold tracking-tight text-gray-900;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+        <!-- Cabeçalho -->
+        <header class="bg-blue-600 text-white p-6 shadow-md">
+            <h1 class="text-2xl md:text-3xl font-bold">Dashboard de Projeção Financeira</h1>
+            <p class="text-blue-100 mt-1">Projeto FinEdTech - Simulação de 3 Anos</p>
+        </header>
+
+        <!-- Navegação das Abas -->
+        <nav class="border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-wrap -mb-px px-4" role="tablist">
+                <button onclick="showTab('premissas')" class="tab-button active py-4 px-3 md:px-5 text-sm font-medium text-gray-500 hover:text-gray-700" role="tab" aria-controls="premissas" aria-selected="true">
+                    🔑 Premissas
+                </button>
+                <button onclick="showTab('resumo')" class="tab-button py-4 px-3 md:px-5 text-sm font-medium text-gray-500 hover:text-gray-700" role="tab" aria-controls="resumo" aria-selected="false">
+                    📄 Resumo Executivo
+                </button>
+                <button onclick="showTab('dashboard')" class="tab-button py-4 px-3 md:px-5 text-sm font-medium text-gray-500 hover:text-gray-700" role="tab" aria-controls="dashboard" aria-selected="false">
+                    📈 Dashboard Visual
+                </button>
+                <button onclick="showTab('projecoes')" class="tab-button py-4 px-3 md:px-5 text-sm font-medium text-gray-500 hover:text-gray-700" role="tab" aria-controls="projecoes" aria-selected="false">
+                    📊 Projeções (Tabelas)
+                </button>
+                <button onclick="showTab('kpis')" class="tab-button py-4 px-3 md:px-5 text-sm font-medium text-gray-500 hover:text-gray-700" role="tab" aria-controls="kpis" aria-selected="false">
+                    📉 Indicadores (KPIs)
+                </button>
+            </div>
+        </nav>
+
+        <!-- Conteúdo das Abas -->
+        <div class="p-6 md:p-8">
+
+            <!-- ======================= -->
+            <!-- ABA 1: PREMISSAS        -->
+            <!-- ======================= -->
+            <div id="premissasContent" class="tab-content active">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔑 Premissas Financeiras (Cenário Moderado)</h2>
+                <p class="mb-6 text-gray-600">Altere qualquer valor abaixo e clique em "Calcular" para atualizar todas as projeções do dashboard.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Coluna 1: Crescimento -->
+                    <div class="bg-gray-50 p-5 rounded-lg shadow-inner space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Crescimento de Usuários</h3>
+                        <div class="form-group">
+                            <label for="novosUsuariosMes1" class="block text-sm font-medium text-gray-700">Novos Usuários (Mês 1)</label>
+                            <input type="number" id="novosUsuariosMes1" value="5000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div class="form-group">
+                            <label for="crescimentoAno1" class="block text-sm font-medium text-gray-700">Crescimento M/M (Ano 1)</label>
+                            <input type="number" id="crescimentoAno1" value="10" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                        <div class="form-group">
+                            <label for="crescimentoAno2" class="block text-sm font-medium text-gray-700">Crescimento M/M (Ano 2)</label>
+                            <input type="number" id="crescimentoAno2" value="7" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                        <div class="form-group">
+                            <label for="crescimentoAno3" class="block text-sm font-medium text-gray-700">Crescimento M/M (Ano 3)</label>
+                            <input type="number" id="crescimentoAno3" value="5" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                    </div>
+
+                    <!-- Coluna 2: Monetização -->
+                    <div class="bg-gray-50 p-5 rounded-lg shadow-inner space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Monetização (Assinaturas)</h3>
+                        <div class="form-group">
+                            <label for="precoMensal" class="block text-sm font-medium text-gray-700">Preço Plano Premium (Mensal)</label>
+                            <input type="number" id="precoMensal" value="29.90" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="R$">
+                        </div>
+                        <div class="form-group">
+                            <label for="precoAnual" class="block text-sm font-medium text-gray-700">Preço Plano Premium (Anual)</label>
+                            <input type="number" id="precoAnual" value="299.00" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="R$">
+                        </div>
+                        <div class="form-group">
+                            <label for="taxaConversao" class="block text-sm font-medium text-gray-700">Taxa de Conversão (Free -> Premium)</label>
+                            <input type="number" id="taxaConversao" value="5" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                        <div class="form-group">
+                            <label for="taxaChurn" class="block text-sm font-medium text-gray-700">Taxa de Churn (Premium Mensal)</label>
+                            <input type="number" id="taxaChurn" value="8" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                        <div class="form-group">
+                            <label for="percAnual" class="block text-sm font-medium text-gray-700">% de Assinantes Anuais (Novos)</label>
+                            <input type="number" id="percAnual" value="30" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                    </div>
+
+                    <!-- Coluna 3: Custos -->
+                    <div class="bg-gray-50 p-5 rounded-lg shadow-inner space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Custos & Outras Receitas</h3>
+                        <div class="form-group">
+                            <label for="cac" class="block text-sm font-medium text-gray-700">CAC (Custo por Novo Usuário Premium)</label>
+                            <input type="number" id="cac" value="20.00" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="R$">
+                        </div>
+                        <div class="form-group">
+                            <label for="taxaPlataforma" class="block text-sm font-medium text-gray-700">Taxa de Plataforma/Pagamento</label>
+                            <input type="number" id="taxaPlataforma" value="5" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="%">
+                        </div>
+                        <div class="form-group">
+                            <label for="custoInfra" class="block text-sm font-medium text-gray-700">Custo de Infra (por 1k usuários)</label>
+                            <input type="number" id="custoInfra" value="50.00" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="R$">
+                        </div>
+                        <div class="form-group">
+                            <label for="custoFixo" class="block text-sm font-medium text-gray-700">Custo Fixo Total (Equipe, Softwares)</label>
+                            <input type="number" id="custoFixo" value="51500" step="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="R$">
+                        </div>
+                        <div class="form-group">
+                            <label for="outrasReceitas" class="block text-sm font-medium text-gray-700">Outras Receitas (Parcerias, B2B)</label>
+                            <input type="number" id="outrasReceitas" value="25000" step="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="R$ / Mês">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button id="calculateButton" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-lg shadow-md hover:bg-blue-700 transition-all text-lg">
+                        Calcular Projeções
+                    </button>
+                </div>
+            </div>
+
+            <!-- ======================= -->
+            <!-- ABA 2: RESUMO EXECUTIVO -->
+            <!-- ======================= -->
+            <div id="resumoContent" class="tab-content">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">📄 Resumo Executivo (Projeção 3 Anos)</h2>
+                
+                <!-- KPIs de Alto Nível -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                    <div class="kpi-card bg-blue-50 border-l-4 border-blue-500">
+                        <div class="kpi-title">Receita Total (3 Anos)</div>
+                        <div id="resumoReceitaTotal" class="kpi-value text-blue-600">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card bg-green-50 border-l-4 border-green-500">
+                        <div class="kpi-title">Lucro Líquido (3 Anos)</div>
+                        <div id="resumoLucroTotal" class="kpi-value text-green-600">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card bg-yellow-50 border-l-4 border-yellow-500">
+                        <div class="kpi-title">Usuários Premium (Fim Ano 3)</div>
+                        <div id="resumoUsuariosPremium" class="kpi-value text-yellow-700">0</div>
+                    </div>
+                    <div class="kpi-card bg-indigo-50 border-l-4 border-indigo-500">
+                        <div class="kpi-title">Ponto de Equilíbrio (Mês)</div>
+                        <div id="resumoBreakeven" class="kpi-value text-indigo-600">N/A</div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Resumo Anual -->
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Métrica Principal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano 1</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano 2</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano 3</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="resumoTabelaBody">
+                            <!-- Linhas serão inseridas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================= -->
+            <!-- ABA 3: DASHBOARD VISUAL -->
+            <!-- ======================= -->
+            <div id="dashboardContent" class="tab-content">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">📈 Dashboard Visual</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Gráfico 1: Receita vs Custo -->
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolução da Receita vs. Custo Total (36 Meses)</h3>
+                        <canvas id="receitaVsCustoChart"></canvas>
+                    </div>
+
+                    <!-- Gráfico 2: Crescimento de Usuários -->
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Crescimento da Base de Usuários (36 Meses)</h3>
+                        <canvas id="usuariosChart"></canvas>
+                    </div>
+
+                    <!-- Gráfico 3: Composição da Receita -->
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Composição da Receita (Total 3 Anos)</h3>
+                        <!-- Contêiner relativo para o Chart.js -->
+                        <div class="relative h-64 md:h-80 w-full max-w-xs mx-auto">
+                            <canvas id="composicaoReceitaChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico 4: Composição dos Custos -->
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Composição dos Custos (Total 3 Anos)</h3>
+                        <!-- Contêiner relativo para o Chart.js -->
+                        <div class="relative h-64 md:h-80 w-full max-w-xs mx-auto">
+                            <canvas id="composicaoCustosChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ======================= -->
+            <!-- ABA 4: PROJEÇÕES        -->
+            <!-- ======================= -->
+            <div id="projecoesContent" class="tab-content">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">📊 Projeções (Tabelas)</h2>
+                <p class="mb-4 text-gray-600">A tabela abaixo mostra a projeção mês a mês. Role horizontalmente para ver todos os dados.</p>
+
+                <!-- Tabela de Projeções Detalhada -->
+                <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">Métrica</th>
+                                <!-- Cabeçalhos dos meses serão inseridos via JS -->
+                                <script>
+                                    let headerRow = document.querySelector("#projecoesContent thead tr");
+                                    for (let i = 1; i <= 36; i++) {
+                                        headerRow.innerHTML += `<th class="px-4 py-3 text-right font-semibold text-gray-700 uppercase tracking-wider">Mês ${i}</th>`;
+                                    }
+                                </script>
+                            </tr>
+                        </thead>
+                        <tbody id="projecoesTabelaBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Linhas serão inseridas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================= -->
+            <!-- ABA 5: KPIs             -->
+            <!-- ======================= -->
+            <div id="kpisContent" class="tab-content">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">📉 Indicadores Financeiros (KPIs)</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                    <div class="kpi-card">
+                        <div class="kpi-title">LTV (Lifetime Value)</div>
+                        <div id="kpiLTV" class="kpi-value">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">CAC (Custo de Aquisição)</div>
+                        <div id="kpiCAC" class="kpi-value">R$ 0,00</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">LTV / CAC Ratio</div>
+                        <div id="kpiLtvCac" class="kpi-value">0.0x</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano 1</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano 2</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano 3</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="kpisTabelaBody">
+                            <!-- Linhas serão inseridas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Carregamento -->
+    <div id="loadingModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-lg font-medium text-gray-700">Calculando projeções...</p>
+        </div>
+    </div>
+
+    <script>
+        // =======================
+        // LÓGICA DE NAVEGAÇÃO
+        // =======================
+        const tabs = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function showTab(tabName) {
+            // Atualiza botões
+            tabs.forEach(tab => {
+                const isSelected = tab.getAttribute('aria-controls') === tabName;
+                tab.classList.toggle('active', isSelected);
+                tab.setAttribute('aria-selected', isSelected);
+            });
+            // Atualiza conteúdo
+            tabContents.forEach(content => {
+                const isSelected = content.id === `${tabName}Content`;
+                content.classList.toggle('active', isSelected);
+            });
+        }
+
+        // =======================
+        // LÓGICA FINANCEIRA
+        // =======================
+        const calculateButton = document.getElementById('calculateButton');
+        const loadingModal = document.getElementById('loadingModal');
+        let chartInstances = {}; // Para armazenar instâncias de gráficos
+
+        calculateButton.addEventListener('click', () => {
+            loadingModal.style.display = 'flex';
+            // Adiciona um pequeno delay para o modal aparecer antes do cálculo pesado
+            setTimeout(() => {
+                const results = runSimulation();
+                updateUI(results);
+                loadingModal.style.display = 'none';
+                showTab('resumo'); // Leva o usuário para o resumo após o cálculo
+            }, 500);
+        });
+
+        // Formatação de Moeda
+        const formatCurrency = (value) => {
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
+        // Formatação de Número
+        const formatNumber = (value) => {
+            return value.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+        };
+
+        // Função principal de simulação
+        function runSimulation() {
+            // 1. Obter Premissas
+            const p = {
+                novosUsuariosMes1: parseFloat(document.getElementById('novosUsuariosMes1').value) || 0,
+                crescimentoAno1: (parseFloat(document.getElementById('crescimentoAno1').value) || 0) / 100,
+                crescimentoAno2: (parseFloat(document.getElementById('crescimentoAno2').value) || 0) / 100,
+                crescimentoAno3: (parseFloat(document.getElementById('crescimentoAno3').value) || 0) / 100,
+                precoMensal: parseFloat(document.getElementById('precoMensal').value) || 0,
+                precoAnual: parseFloat(document.getElementById('precoAnual').value) || 0,
+                taxaConversao: (parseFloat(document.getElementById('taxaConversao').value) || 0) / 100,
+                taxaChurn: (parseFloat(document.getElementById('taxaChurn').value) || 0) / 100,
+                percAnual: (parseFloat(document.getElementById('percAnual').value) || 0) / 100,
+                cac: parseFloat(document.getElementById('cac').value) || 0,
+                taxaPlataforma: (parseFloat(document.getElementById('taxaPlataforma').value) || 0) / 100,
+                custoInfra: parseFloat(document.getElementById('custoInfra').value) || 0,
+                custoFixo: parseFloat(document.getElementById('custoFixo').value) || 0,
+                outrasReceitas: parseFloat(document.getElementById('outrasReceitas').value) || 0,
+            };
+
+            // 2. Inicializar Arrays de Projeção (36 meses)
+            let proj = {
+                mes: Array(36).fill(0).map((_, i) => i + 1),
+                usuariosGratuitos: Array(36).fill(0),
+                novosGratuitos: Array(36).fill(0),
+                usuariosPremium: Array(36).fill(0),
+                novosPremium: Array(36).fill(0),
+                churnPremium: Array(36).fill(0),
+                receitaAssinaturas: Array(36).fill(0),
+                receitaOutras: Array(36).fill(0),
+                receitaTotal: Array(36).fill(0),
+                custoCAC: Array(36).fill(0),
+                custoInfra: Array(36).fill(0),
+                custoTaxas: Array(36).fill(0),
+                custoFixo: Array(36).fill(0),
+                custoTotal: Array(36).fill(0),
+                lucroLiquido: Array(36).fill(0),
+                fluxoCaixaAcumulado: Array(36).fill(0),
+            };
+
+            // 3. Loop de Projeção (Mês a Mês)
+            let usuariosGratuitosInicio = 0;
+            let usuariosPremiumInicio = 0;
+            let fluxoCaixaAcumulado = 0;
+
+            for (let i = 0; i < 36; i++) {
+                // Determina crescimento
+                let crescimentoMensal;
+                if (i < 12) {
+                    crescimentoMensal = p.crescimentoAno1;
+                } else if (i < 24) {
+                    crescimentoMensal = p.crescimentoAno2;
+                } else {
+                    crescimentoMensal = p.crescimentoAno3;
+                }
+                
+                // Usuários
+                proj.novosGratuitos[i] = (i === 0) ? p.novosUsuariosMes1 : proj.novosGratuitos[i - 1] * (1 + crescimentoMensal);
+                proj.novosPremium[i] = (usuariosGratuitosInicio + proj.novosGratuitos[i]) * p.taxaConversao;
+                proj.churnPremium[i] = usuariosPremiumInicio * p.taxaChurn;
+                
+                let totalGratuitosFim = usuariosGratuitosInicio + proj.novosGratuitos[i] - proj.novosPremium[i];
+                proj.usuariosGratuitos[i] = totalGratuitosFim;
+
+                let totalPremiumFim = usuariosPremiumInicio + proj.novosPremium[i] - proj.churnPremium[i];
+                proj.usuariosPremium[i] = totalPremiumFim;
+
+                // Receitas
+                let receitaMensal = (totalPremiumFim * (1 - p.percAnual)) * p.precoMensal;
+                let receitaAnual = (proj.novosPremium[i] * p.percAnual) * p.precoAnual;
+                proj.receitaAssinaturas[i] = receitaMensal + (receitaAnual / 12); // Simplificando a receita anual como média mensal
+                proj.receitaOutras[i] = p.outrasReceitas; // Simplificado como fixo
+                proj.receitaTotal[i] = proj.receitaAssinaturas[i] + proj.receitaOutras[i];
+
+                // Custos
+                proj.custoCAC[i] = proj.novosPremium[i] * p.cac;
+                let totalUsuarios = totalGratuitosFim + totalPremiumFim;
+                proj.custoInfra[i] = (totalUsuarios / 1000) * p.custoInfra;
+                proj.custoTaxas[i] = proj.receitaTotal[i] * p.taxaPlataforma;
+                proj.custoFixo[i] = p.custoFixo;
+                
+                proj.custoTotal[i] = proj.custoCAC[i] + proj.custoInfra[i] + proj.custoTaxas[i] + proj.custoFixo[i];
+
+                // Resultado
+                proj.lucroLiquido[i] = proj.receitaTotal[i] - proj.custoTotal[i];
+                fluxoCaixaAcumulado += proj.lucroLiquido[i];
+                proj.fluxoCaixaAcumulado[i] = fluxoCaixaAcumulado;
+
+                // Atualiza valores para próximo loop
+                usuariosGratuitosInicio = totalGratuitosFim;
+                usuariosPremiumInicio = totalPremiumFim;
+            }
+
+            // 4. Calcular Totais Anuais e KPIs
+            const sumByYear = (arr, year) => {
+                const start = (year - 1) * 12;
+                const end = year * 12;
+                return arr.slice(start, end).reduce((a, b) => a + b, 0);
+            };
+
+            let anuais = {
+                receita: [],
+                custos: [],
+                lucro: [],
+                novosPremium: [],
+                custoCAC: []
+            };
+
+            for (let y = 1; y <= 3; y++) {
+                anuais.receita.push(sumByYear(proj.receitaTotal, y));
+                anuais.custos.push(sumByYear(proj.custoTotal, y));
+                anuais.lucro.push(sumByYear(proj.lucroLiquido, y));
+                anuais.novosPremium.push(sumByYear(proj.novosPremium, y));
+                anuais.custoCAC.push(sumByYear(proj.custoCAC, y));
+            }
+
+            // KPIs
+            let kpis = {};
+            // ARPU (Receita média por usuário premium)
+            kpis.arpuAno1 = sumByYear(proj.receitaAssinaturas, 1) / 12 / (proj.usuariosPremium[11] || 1);
+            kpis.arpuAno2 = sumByYear(proj.receitaAssinaturas, 2) / 12 / (proj.usuariosPremium[23] || 1);
+            kpis.arpuAno3 = sumByYear(proj.receitaAssinaturas, 3) / 12 / (proj.usuariosPremium[35] || 1);
+
+            // LTV (Lifetime Value)
+            kpis.ltvAno1 = kpis.arpuAno1 / (p.taxaChurn || 1);
+            kpis.ltvAno2 = kpis.arpuAno2 / (p.taxaChurn || 1);
+            kpis.ltvAno3 = kpis.arpuAno3 / (p.taxaChurn || 1);
+
+            // CAC (Custo de Aquisição de Cliente)
+            kpis.cacAno1 = anuais.custoCAC[0] / (anuais.novosPremium[0] || 1);
+            kpis.cacAno2 = anuais.custoCAC[1] / (anuais.novosPremium[1] || 1);
+            kpis.cacAno3 = anuais.custoCAC[2] / (anuais.novosPremium[2] || 1);
+
+            // Breakeven
+            kpis.breakevenMes = proj.fluxoCaixaAcumulado.findIndex(v => v > 0) + 1;
+
+            return { p, proj, anuais, kpis };
+        }
+
+        // Função para atualizar a UI com os resultados
+        function updateUI(results) {
+            const { p, proj, anuais, kpis } = results;
+
+            // === ABA: Resumo Executivo ===
+            const receitaTotal3Anos = anuais.receita.reduce((a, b) => a + b, 0);
+            const lucroTotal3Anos = anuais.lucro.reduce((a, b) => a + b, 0);
+
+            document.getElementById('resumoReceitaTotal').textContent = formatCurrency(receitaTotal3Anos);
+            document.getElementById('resumoLucroTotal').textContent = formatCurrency(lucroTotal3Anos);
+            document.getElementById('resumoUsuariosPremium').textContent = formatNumber(proj.usuariosPremium[35]);
+            document.getElementById('resumoBreakeven').textContent = kpis.breakevenMes > 0 ? `${kpis.breakevenMes} meses` : "N/A";
+
+            const resumoTabelaBody = document.getElementById('resumoTabelaBody');
+            resumoTabelaBody.innerHTML = `
+                <tr class="font-medium">
+                    <td class="px-6 py-4">Receita Total</td>
+                    <td class="px-6 py-4">${formatCurrency(anuais.receita[0])}</td>
+                    <td class="px-6 py-4">${formatCurrency(anuais.receita[1])}</td>
+                    <td class="px-6 py-4">${formatCurrency(anuais.receita[2])}</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4">Custos Totais</td>
+                    <td class="px-6 py-4">${formatCurrency(anuais.custos[0])}</td>
+                    <td class="px-6 py-4">${formatCurrency(anuais.custos[1])}</td>
+                    <td class="px-6 py-4">${formatCurrency(anuais.custos[2])}</td>
+                </tr>
+                <tr class="font-medium bg-gray-50">
+                    <td class="px-6 py-4">Lucro Líquido</td>
+                    <td class="px-6 py-4 ${anuais.lucro[0] < 0 ? 'text-red-600' : 'text-green-600'}">${formatCurrency(anuais.lucro[0])}</td>
+                    <td class="px-6 py-4 ${anuais.lucro[1] < 0 ? 'text-red-600' : 'text-green-600'}">${formatCurrency(anuais.lucro[1])}</td>
+                    <td class="px-6 py-4 ${anuais.lucro[2] < 0 ? 'text-red-600' : 'text-green-600'}">${formatCurrency(anuais.lucro[2])}</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4">Usuários Premium (Fim de Ano)</td>
+                    <td class="px-6 py-4">${formatNumber(proj.usuariosPremium[11])}</td>
+                    <td class="px-6 py-4">${formatNumber(proj.usuariosPremium[23])}</td>
+                    <td class="px-6 py-4">${formatNumber(proj.usuariosPremium[35])}</td>
+                </tr>
+            `;
+
+            // === ABA: KPIs ===
+            document.getElementById('kpiLTV').textContent = formatCurrency(kpis.ltvAno3);
+            document.getElementById('kpiCAC').textContent = formatCurrency(kpis.cacAno3);
+            const ltvCacRatio = kpis.ltvAno3 / (kpis.cacAno3 || 1);
+            document.getElementById('kpiLtvCac').textContent = `${ltvCacRatio.toFixed(1)}x`;
+
+            const kpisTabelaBody = document.getElementById('kpisTabelaBody');
+            kpisTabelaBody.innerHTML = `
+                <tr>
+                    <td class="px-6 py-4">LTV (Lifetime Value)</td>
+                    <td class="px-6 py-4">${formatCurrency(kpis.ltvAno1)}</td>
+                    <td class="px-6 py-4">${formatCurrency(kpis.ltvAno2)}</td>
+                    <td class="px-6 py-4">${formatCurrency(kpis.ltvAno3)}</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4">CAC (Custo de Aquisição)</td>
+                    <td class="px-6 py-4">${formatCurrency(kpis.cacAno1)}</td>
+                    <td class="px-6 py-4">${formatCurrency(kpis.cacAno2)}</td>
+                    <td class="px-6 py-4">${formatCurrency(kpis.cacAno3)}</td>
+                </tr>
+                <tr class="font-medium bg-gray-50">
+                    <td class="px-6 py-4">LTV / CAC Ratio</td>
+                    <td class="px-6 py-4">${(kpis.ltvAno1 / (kpis.cacAno1 || 1)).toFixed(1)}x</td>
+                    <td class="px-6 py-4">${(kpis.ltvAno2 / (kpis.cacAno2 || 1)).toFixed(1)}x</td>
+                    <td class="px-6 py-4">${(kpis.ltvAno3 / (kpis.cacAno3 || 1)).toFixed(1)}x</td>
+                </tr>
+            `;
+
+            // === ABA: Projeções (Tabela) ===
+            const projecoesTabelaBody = document.getElementById('projecoesTabelaBody');
+            projecoesTabelaBody.innerHTML = `
+                ${createTabelaRow('Usuários Premium', proj.usuariosPremium, 'number')}
+                ${createTabelaRow('Novos Premium', proj.novosPremium, 'number')}
+                ${createTabelaRow('Usuários Gratuitos', proj.usuariosGratuitos, 'number')}
+                <tr class="bg-gray-50 font-semibold"><td class="px-4 py-2" colspan="37">Receitas</td></tr>
+                ${createTabelaRow('Receita Assinaturas', proj.receitaAssinaturas)}
+                ${createTabelaRow('Receita Outras', proj.receitaOutras)}
+                ${createTabelaRow('Receita TOTAL', proj.receitaTotal, 'currency', true)}
+                <tr class="bg-gray-50 font-semibold"><td class="px-4 py-2" colspan="37">Custos</td></tr>
+                ${createTabelaRow('Custo CAC', proj.custoCAC)}
+                ${createTabelaRow('Custo Infra', proj.custoInfra)}
+                ${createTabelaRow('Custo Taxas', proj.custoTaxas)}
+                ${createTabelaRow('Custo Fixo', proj.custoFixo)}
+                ${createTabelaRow('Custo TOTAL', proj.custoTotal, 'currency', true)}
+                <tr class="bg-blue-50 font-semibold"><td class="px-4 py-2" colspan="37">Resultado</td></tr>
+                ${createTabelaRow('Lucro Líquido', proj.lucroLiquido)}
+                ${createTabelaRow('Fluxo Caixa Acumulado', proj.fluxoCaixaAcumulado)}
+            `;
+
+            // === ABA: Dashboard Visual (Gráficos) ===
+            updateCharts(proj, anuais);
+        }
+
+        // Helper para criar linha da tabela de projeção
+        function createTabelaRow(label, data, format = 'currency', bold = false) {
+            let row = `<tr class="${bold ? 'font-bold' : ''}">
+                <td class="px-4 py-2 sticky left-0 bg-white shadow-sm">${label}</td>`;
+            
+            for (let val of data) {
+                let formattedVal;
+                if (format === 'number') {
+                    formattedVal = formatNumber(val);
+                } else {
+                    formattedVal = formatCurrency(val);
+                }
+                row += `<td class="px-4 py-2 text-right ${val < 0 ? 'text-red-500' : ''}">${formattedVal}</td>`;
+            }
+            row += `</tr>`;
+            return row;
+        }
+
+        // Helper para atualizar os gráficos
+        function updateCharts(proj, anuais) {
+            const labels36Meses = proj.mes.map(m => `Mês ${m}`);
+
+            // Gráfico 1: Receita vs Custo
+            const ctx1 = document.getElementById('receitaVsCustoChart').getContext('2d');
+            if (chartInstances.receitaVsCusto) chartInstances.receitaVsCusto.destroy();
+            chartInstances.receitaVsCusto = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels36Meses,
+                    datasets: [
+                        {
+                            label: 'Receita Total',
+                            data: proj.receitaTotal,
+                            borderColor: '#3b82f6', // Azul
+                            backgroundColor: '#3b82f6',
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Custo Total',
+                            data: proj.custoTotal,
+                            borderColor: '#ef4444', // Vermelho
+                            backgroundColor: '#ef4444',
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Fluxo de Caixa Acumulado',
+                            data: proj.fluxoCaixaAcumulado,
+                            borderColor: '#10b981', // Verde
+                            backgroundColor: '#10b981',
+                            tension: 0.1,
+                            fill: false,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: false } } }
+            });
+
+            // Gráfico 2: Usuários
+            const ctx2 = document.getElementById('usuariosChart').getContext('2d');
+            if (chartInstances.usuarios) chartInstances.usuarios.destroy();
+            chartInstances.usuarios = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: labels36Meses,
+                    datasets: [
+                        {
+                            label: 'Usuários Premium',
+                            data: proj.usuariosPremium,
+                            borderColor: '#10b981', // Verde
+                            backgroundColor: '#10b981',
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Usuários Gratuitos',
+                            data: proj.usuariosGratuitos,
+                            borderColor: '#6b7280', // Cinza
+                            backgroundColor: '#6b7280',
+                            tension: 0.1,
+                            fill: false,
+                            hidden: true // Oculto por padrão para não poluir
+                        }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // Gráfico 3: Composição Receita (Total 3 Anos)
+            const receitaTotal3Anos = {
+                assinaturas: sumByYear(proj.receitaAssinaturas, 1) + sumByYear(proj.receitaAssinaturas, 2) + sumByYear(proj.receitaAssinaturas, 3),
+                outras: sumByYear(proj.receitaOutras, 1) + sumByYear(proj.receitaOutras, 2) + sumByYear(proj.receitaOutras, 3)
+            };
+            const ctx3 = document.getElementById('composicaoReceitaChart').getContext('2d');
+            if (chartInstances.composicaoReceita) chartInstances.composicaoReceita.destroy();
+            chartInstances.composicaoReceita = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: ['Assinaturas', 'Outras Receitas'],
+                    datasets: [{
+                        data: [receitaTotal3Anos.assinaturas, receitaTotal3Anos.outras],
+                        backgroundColor: ['#3b82f6', '#14b8a6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+            
+            // Gráfico 4: Composição Custos (Total 3 Anos)
+            const custosTotal3Anos = {
+                cac: sumByYear(proj.custoCAC, 1) + sumByYear(proj.custoCAC, 2) + sumByYear(proj.custoCAC, 3),
+                infra: sumByYear(proj.custoInfra, 1) + sumByYear(proj.custoInfra, 2) + sumByYear(proj.custoInfra, 3),
+                taxas: sumByYear(proj.custoTaxas, 1) + sumByYear(proj.custoTaxas, 2) + sumByYear(proj.custoTaxas, 3),
+                fixo: sumByYear(proj.custoFixo, 1) + sumByYear(proj.custoFixo, 2) + sumByYear(proj.custoFixo, 3)
+            };
+            const ctx4 = document.getElementById('composicaoCustosChart').getContext('2d');
+            if (chartInstances.composicaoCustos) chartInstances.composicaoCustos.destroy();
+            chartInstances.composicaoCustos = new Chart(ctx4, {
+                type: 'doughnut',
+                data: {
+                    labels: ['CAC', 'Infraestrutura', 'Taxas', 'Custo Fixo'],
+                    datasets: [{
+                        data: [custosTotal3Anos.cac, custosTotal3Anos.infra, custosTotal3Anos.taxas, custosTotal3Anos.fixo],
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#8b5cf6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+            
+            // Helper para somar por ano
+            function sumByYear(arr, year) {
+                const start = (year - 1) * 12;
+                const end = year * 12;
+                return arr.slice(start, end).reduce((a, b) => a + b, 0);
+            }
+        }
+
+        // Calcular e preencher no carregamento inicial
+        window.onload = () => {
+            const initialResults = runSimulation();
+            updateUI(initialResults);
+        };
+    </script>
+</body>
+</html>
